@@ -13,3 +13,45 @@ spring:
       hibernate:
         format_sql: true
     defer-datasource-initialization: true
+
+logging:
+  level:
+    com.simple.trading.robot: trace
+
+simple-trading-robot:
+  token:
+  sandbox-token:
+  strategies:
+    - enabled: true
+      name: strategy1
+      strategy-type: simple_strategy
+      instrument: inst_name
+      account:
+        id: 123
+        max-sum: 10000.3
+        max-percent: 44
+    - enabled: true
+      name: strategy2
+      strategy-type: simple_strategy
+      instrument: inst_name
+      account:
+        id: 123
+        max-sum: 10000.22
+        max-percent: 46.5
+    - enabled: true
+      name: strategy3
+      strategy-type: simple_strategy
+      instrument: inst_name
+      account:
+        id: 123
+        max-sum: 10000.22
+        max-percent: 46.5
+        sandbox: true
+    - enabled: false
+      name: strategy4
+      strategy-type: another_strategy
+      instrument: inst_name
+      account:
+        id: 123
+        max-sum: 10000.22
+        max-percent: 46.5
