@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface OrderService {
 
-    List<Order> getOpenedOrdersByInstrumentAndAccount(String instrument, String accountId);
+    List<Order> getOpenedOrdersByInstrumentAndAccountAndStrategyName(String instrument, String accountId, String strategyName);
 }

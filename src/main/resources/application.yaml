@@ -19,30 +19,38 @@ logging:
     com.simple.trading.robot: trace
 
 simple-trading-robot:
-  token:
-  sandbox-token:
+  tinkoff-api:
+    token: ${TINKOFF_TOKEN}
+    sandbox-token: ${TINKOFF_SANDBOX_TOKEN}
+  threads:
+    always-active: 2
+    max-size: 10
+    seconds-to-live: 10
   strategies:
     - enabled: true
       name: strategy1
       strategy-type: simple_strategy
-      instrument: inst_name
+      instrument: FUTRTS032500
       account:
+        api: tinkoff_api
         id: 123
         max-sum: 10000.3
         max-percent: 44
     - enabled: true
       name: strategy2
       strategy-type: simple_strategy
-      instrument: inst_name
+      instrument: FUTYDEX03250
       account:
+        api: tinkoff_api
         id: 123
         max-sum: 10000.22
         max-percent: 46.5
     - enabled: true
       name: strategy3
       strategy-type: simple_strategy
-      instrument: inst_name
+      instrument: FUTYDEX03250
       account:
+        api: tinkoff_api
         id: 123
         max-sum: 10000.22
         max-percent: 46.5
@@ -52,6 +60,7 @@ simple-trading-robot:
       strategy-type: another_strategy
       instrument: inst_name
       account:
+        api: tinkoff_api
         id: 123
         max-sum: 10000.22
         max-percent: 46.5

@@ -41,7 +41,7 @@
 		<dependency>
 			<groupId>ru.tinkoff.piapi</groupId>
 			<artifactId>java-sdk-core</artifactId>
-			<version>1.28</version>
+			<version>1.30</version>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>

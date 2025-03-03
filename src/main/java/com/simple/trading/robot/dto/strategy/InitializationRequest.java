@@ -10,5 +10,6 @@ import java.util.List;
 public class InitializationRequest {
 
     private String accountId;
+    private String strategyName;
     private List<InstrumentInfoRequest> instrumentsInfo;
 }

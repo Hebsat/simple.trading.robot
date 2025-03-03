@@ -1,5 +1,6 @@
 package com.simple.trading.robot.strategy;
 
+import com.simple.trading.robot.service.api.ApiType;
 import com.simple.trading.robot.strategy.strategies.Strategy;
 
 import java.util.List;
@@ -10,7 +11,7 @@ public interface StrategyService {
 
     Strategy getStrategy(String name);
 
-    Set<String> getAllInstruments();
+    Map<ApiType, Set<String>> getAllInstrumentsByApi();
 
     Map<String, List<String>> getStrategiesInstruments();
 

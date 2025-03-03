@@ -3,6 +3,7 @@ package com.simple.trading.robot.strategy;
 import com.simple.trading.robot.configuraton.SimpleTradingRobotProperties;
 import com.simple.trading.robot.dto.properties.StrategyTemplate;
 import com.simple.trading.robot.exception.SimpleTradingRobotPropertiesException;
+import com.simple.trading.robot.service.api.ApiType;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +25,7 @@ public class StrategyPrepareServiceImpl implements StrategyPrepareService {
 
     private final Map<String, StrategyTemplate> strategiesByNames = new HashMap<>();
     @Getter(onMethod_ = @Override)
-    private final Map<String, List<StrategyTemplate>> strategiesByAccounts = new HashMap<>();
+    private final Map<ApiType, Map<String, List<StrategyTemplate>>> strategiesByApiByAccounts = new EnumMap<>(ApiType.class);
 
     @PostConstruct
     public void init() {
@@ -36,7 +38,9 @@ public class StrategyPrepareServiceImpl implements StrategyPrepareService {
             throw new SimpleTradingRobotPropertiesException("Каждая стратегия должна иметь уникальное имя");
         }
         strategiesByNames.put(strategyTemplate.getName(), strategyTemplate);
-        strategiesByAccounts.computeIfAbsent(strategyTemplate.getAccount().getId(), k -> new ArrayList<>()).add(strategyTemplate);
+        strategiesByApiByAccounts
+                .computeIfAbsent(strategyTemplate.getAccount().getApi(), k -> new HashMap<>())
+                .computeIfAbsent(strategyTemplate.getAccount().getId(), k -> new ArrayList<>()).add(strategyTemplate);
     }
 
     @Override
