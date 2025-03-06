@@ -3,6 +3,7 @@ package com.simple.trading.robot.service.api.tinkoff;
 import com.simple.trading.robot.dto.api.AccountInfo;
 import com.simple.trading.robot.dto.api.Candle;
 import com.simple.trading.robot.dto.strategy.InstrumentInfoRequest;
+import com.simple.trading.robot.entity.Instrument;
 import com.simple.trading.robot.exception.SimpleTradingRobotRuntimeException;
 import com.simple.trading.robot.service.api.ApiType;
 import com.simple.trading.robot.service.api.MarketApi;
@@ -10,7 +11,9 @@ import com.simple.trading.robot.service.api.tinkoff.mapper.AccountInfoMapper;
 import com.simple.trading.robot.service.api.tinkoff.mapper.CandleMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import ru.tinkoff.piapi.contract.v1.Account;
 import ru.tinkoff.piapi.contract.v1.CandleInterval;
@@ -19,9 +22,12 @@ import ru.tinkoff.piapi.core.InvestApi;
 import ru.tinkoff.piapi.core.models.Portfolio;
 
 import java.time.Instant;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -29,9 +35,16 @@ import java.util.stream.Collectors;
 import static com.simple.trading.robot.service.api.tinkoff.TinkoffConverterUtil.convertToLocalCandleInterval;
 import static com.simple.trading.robot.service.api.tinkoff.TinkoffConverterUtil.timestampToTime;
 import static com.simple.trading.robot.service.api.tinkoff.TinkoffConverterUtil.toBigDecimal;
+import static com.simple.trading.robot.service.api.tinkoff.TinkoffConverterUtil.updateBond;
+import static com.simple.trading.robot.service.api.tinkoff.TinkoffConverterUtil.updateCurrency;
+import static com.simple.trading.robot.service.api.tinkoff.TinkoffConverterUtil.updateEtf;
+import static com.simple.trading.robot.service.api.tinkoff.TinkoffConverterUtil.updateFuture;
+import static com.simple.trading.robot.service.api.tinkoff.TinkoffConverterUtil.updateShare;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "simple-trading-robot.tinkoff-api.enabled", havingValue = "true", matchIfMissing = true)
 public class TinkoffApiAdapter implements MarketApi {
 
     private final AccountInfoMapper accountInfoMapper;
@@ -45,10 +58,16 @@ public class TinkoffApiAdapter implements MarketApi {
     private InvestApi tinkoffApi;
     private InvestApi sandboxApi;
 
+    private final Map<String, Instrument> instrumentCache = new ConcurrentHashMap<>();
+
     @PostConstruct
     public void init() {
         tinkoffApi = InvestApi.create(token, "simple-trading-robot");
         sandboxApi = InvestApi.createSandbox(sandboxToken, "simple-trading-robot");
+    }
+
+    private <T> T invokeApi(Function<InvestApi, T> function, boolean isSandbox) {
+        return function.apply(isSandbox ? sandboxApi : tinkoffApi);
     }
 
     @Override
@@ -75,27 +94,26 @@ public class TinkoffApiAdapter implements MarketApi {
         return invokeApi(i -> i.getSandboxService().openAccountSync(), true);
     }
 
-    private <T> T invokeApi(Function<InvestApi, T> function, boolean isSandbox) {
-        return function.apply(isSandbox ? sandboxApi : tinkoffApi);
-    }
-
     @Override
     public List<Candle> getInstrumentHistory(InstrumentInfoRequest instrumentInfoRequest) {
         Instant now = Instant.now();
         CandleInterval interval = TinkoffConverterUtil.convertToTinkoffCandleInterval(instrumentInfoRequest.getInterval());
         List<HistoricCandle> tinkoffCandles = tinkoffApi.getMarketDataService()
-                .getCandlesSync(instrumentInfoRequest.getName(), now.minus(instrumentInfoRequest.getDuration()), now, interval);
+                .getCandlesSync(instrumentInfoRequest.getInstrument().getTinkoffId(), now.minus(instrumentInfoRequest.getDuration()), now, interval);
 
         return tinkoffCandles.stream().map(c -> candleMapper.mapToCandle(instrumentInfoRequest, c)).toList();
     }
 
     @Override
-    public void listenInstruments(Set<String> instruments, Consumer<Candle> consumer) throws SimpleTradingRobotRuntimeException {
+    public void listenInstruments(Collection<Instrument> instruments, Consumer<Candle> consumer) throws SimpleTradingRobotRuntimeException {
+        instruments.forEach(instrument -> instrumentCache.put(instrument.getTinkoffId(), instrument));
+        String streamId = UUID.randomUUID().toString();
+        log.info("Запуск стрима {} для инструментов: {}", streamId, instruments);
         tinkoffApi.getMarketDataStreamService()
-                .newStream("candles_stream", response -> {
+                .newStream(streamId, response -> {
                     if (response.hasCandle()) {
                         Candle candle = Candle.builder()
-                                .instrument(response.getCandle().getFigi())
+                                .instrument(instrumentCache.get(response.getCandle().getInstrumentUid()))
                                 .interval(convertToLocalCandleInterval(response.getCandle().getInterval()))
                                 .openingPrice(toBigDecimal(response.getCandle().getOpen()))
                                 .closingPrice(toBigDecimal(response.getCandle().getClose()))
@@ -106,9 +124,33 @@ public class TinkoffApiAdapter implements MarketApi {
 
                         consumer.accept(candle);
                     }
-                }, e -> { e.printStackTrace();
-                    throw new SimpleTradingRobotRuntimeException(e.getLocalizedMessage());
+                }, e -> {
+                    log.error("Стрим {} завершен с ошибкой {}", streamId, e.getClass().getName());
+                    throw new SimpleTradingRobotRuntimeException(e);
                 })
-                .subscribeCandles(new ArrayList<>(instruments));
+                .subscribeCandles(instruments.stream().map(Instrument::getTinkoffId).toList());
+    }
+
+    @Override
+    public void updateInstrumentInfo(Instrument instrument) {
+        switch (instrument) {
+            case com.simple.trading.robot.entity.instrument.Bond bond -> updateBond(
+                    tinkoffApi.getInstrumentsService().getAllBondsSync().stream().filter(i -> i.getTicker().equals(instrument.getTicker())).findFirst()
+                            .orElseThrow(() -> new SimpleTradingRobotRuntimeException(String.format("Не найдена облигация с тикером %s", bond.getTicker()))), bond);
+            case com.simple.trading.robot.entity.instrument.Share share -> updateShare(
+                    tinkoffApi.getInstrumentsService().getAllSharesSync().stream().filter(i -> i.getTicker().equals(instrument.getTicker())).findFirst()
+                            .orElseThrow(() -> new SimpleTradingRobotRuntimeException(String.format("Не найдена акция с тикером %s", share.getTicker()))), share);
+            case com.simple.trading.robot.entity.instrument.Future future -> updateFuture(
+                    tinkoffApi.getInstrumentsService().getAllFuturesSync().stream().filter(i -> i.getTicker().equals(instrument.getTicker())).findFirst()
+                            .orElseThrow(() -> new SimpleTradingRobotRuntimeException(String.format("Не найден фьючерс с тикером %s", future.getTicker()))), future);
+            case com.simple.trading.robot.entity.instrument.Currency currency -> updateCurrency(
+                    tinkoffApi.getInstrumentsService().getAllCurrenciesSync().stream().filter(i -> i.getTicker().equals(instrument.getTicker())).findFirst()
+                            .orElseThrow(() -> new SimpleTradingRobotRuntimeException(String.format("Не найдена валюта с тикером %s", currency.getTicker()))), currency);
+            case com.simple.trading.robot.entity.instrument.Etf etf -> updateEtf(
+                    tinkoffApi.getInstrumentsService().getAllEtfsSync().stream().filter(i -> i.getTicker().equals(instrument.getTicker())).findFirst()
+                            .orElseThrow(() -> new SimpleTradingRobotRuntimeException(String.format("Не найден ETF с тикером %s", etf.getTicker()))), etf);
+            default ->
+                    throw new SimpleTradingRobotRuntimeException(String.format("Некорректный тип инструмента %s", instrument.getClass().getName()));
+        }
     }
 }

@@ -1,12 +1,14 @@
 package com.simple.trading.robot.dto.properties;
 
 import com.simple.trading.robot.service.api.ApiType;
+import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
 
 @Data
-public class AccountDto {
+@Builder
+public class AccountTemplate {
 
     private ApiType api;
     private String id;

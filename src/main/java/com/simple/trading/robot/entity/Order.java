@@ -8,6 +8,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.Getter;
@@ -33,14 +35,15 @@ public class Order {
     @Column(nullable = false, length = 36)
     private String accountId;
 
-    @Column(nullable = false, length = 30)
-    private String instrument;
+    @ManyToOne
+    @JoinColumn(name = "instrument_id", nullable = false)
+    private Instrument instrument;
 
     @Column(precision = 20, scale = 9)
     private BigDecimal buyingPrice;
 
     @Column(precision = 20, scale = 9)
-    private BigDecimal buyingComission;
+    private BigDecimal buyingCommission;
 
     private OffsetDateTime buyingTime;
 

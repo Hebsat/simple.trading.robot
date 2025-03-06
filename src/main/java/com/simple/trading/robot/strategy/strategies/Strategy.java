@@ -5,6 +5,7 @@ import com.simple.trading.robot.dto.api.Candle;
 import com.simple.trading.robot.dto.strategy.InitializationRequest;
 import com.simple.trading.robot.dto.strategy.InitializationResponse;
 import com.simple.trading.robot.dto.strategy.StrategyType;
+import com.simple.trading.robot.entity.Instrument;
 import com.simple.trading.robot.service.api.ApiType;
 
 import java.util.List;
@@ -15,7 +16,7 @@ public interface Strategy {
 
     ApiType getApi();
 
-    List<String> getInstruments();
+    Instrument getInstrument();
 
     OrderCommand handleInstantInfo(List<Candle> info);
 

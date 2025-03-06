@@ -1,5 +1,6 @@
 package com.simple.trading.robot.service.market;
 
+import com.simple.trading.robot.entity.Instrument;
 import com.simple.trading.robot.exception.SimpleTradingRobotRuntimeException;
 import com.simple.trading.robot.executor.MarketListenerExecutor;
 import com.simple.trading.robot.service.TradingService;
@@ -30,7 +31,7 @@ public class MarketListenerImpl implements MarketListener {
     }
 
     @Override
-    public void listenToMarket(MarketApi api, Set<String> instruments) {
+    public void listenToMarket(MarketApi api, Set<Instrument> instruments) {
         try {
             api.listenInstruments(instruments, tradingService::handleCurrentPrice);
         } catch (SimpleTradingRobotRuntimeException e) {

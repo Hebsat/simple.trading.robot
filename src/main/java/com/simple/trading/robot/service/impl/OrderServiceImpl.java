@@ -1,5 +1,6 @@
 package com.simple.trading.robot.service.impl;
 
+import com.simple.trading.robot.entity.Instrument;
 import com.simple.trading.robot.entity.Order;
 import com.simple.trading.robot.repository.OrderRepository;
 import com.simple.trading.robot.service.OrderService;
@@ -17,7 +18,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
 
     @Override
-    public List<Order> getOpenedOrdersByInstrumentAndAccountAndStrategyName(String instrument, String accountId, String strategyName) {
+    public List<Order> getOpenedOrdersByInstrumentAndAccountAndStrategyName(Instrument instrument, String accountId, String strategyName) {
         return orderRepository.findAllByInstrumentAndAccountIdAndStrategyNameAndOrderProfitIsNull(instrument, accountId, strategyName);
     }
 }

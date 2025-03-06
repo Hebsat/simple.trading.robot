@@ -1,6 +1,7 @@
 package com.simple.trading.robot.dto.api;
 
 import com.simple.trading.robot.dto.CandleInterval;
+import com.simple.trading.robot.entity.Instrument;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,7 +16,7 @@ import java.time.OffsetDateTime;
 @ToString
 public class Candle {
 
-    private String instrument;
+    private Instrument instrument;
     private BigDecimal openingPrice;
     private BigDecimal closingPrice;
     private BigDecimal highestPrice;

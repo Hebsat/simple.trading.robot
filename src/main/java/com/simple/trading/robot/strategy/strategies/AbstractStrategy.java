@@ -1,6 +1,7 @@
 package com.simple.trading.robot.strategy.strategies;
 
 import com.simple.trading.robot.dto.properties.StrategyTemplate;
+import com.simple.trading.robot.entity.Instrument;
 import com.simple.trading.robot.exception.SimpleTradingRobotRuntimeException;
 import com.simple.trading.robot.service.api.ApiType;
 import lombok.Getter;
@@ -8,8 +9,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.core.log.LogAccessor;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 
 public abstract class AbstractStrategy implements Strategy {
 
@@ -23,7 +22,7 @@ public abstract class AbstractStrategy implements Strategy {
     private boolean isSandbox;
     private BigDecimal amount;
     @Getter(onMethod_ = @Override)
-    protected List<String> instruments;
+    protected Instrument instrument;
 
     protected AbstractStrategy(StrategyTemplate strategyTemplate) {
         if (!checkType(strategyTemplate.getStrategyType())) {
@@ -33,8 +32,10 @@ public abstract class AbstractStrategy implements Strategy {
         this.api = strategyTemplate.getAccount().getApi();
         this.accountId = strategyTemplate.getAccount().getId();
         this.amount = strategyTemplate.getAccount().getMaxSum();
-        this.instruments = new ArrayList<>(List.of(strategyTemplate.getInstrument()));
         this.isSandbox = strategyTemplate.getAccount().isSandbox();
+        this.instrument = new Instrument();
+        this.instrument.setTicker(strategyTemplate.getInstrument().getTicker());
+        this.instrument.setType(strategyTemplate.getInstrument().getType());
     }
 
     abstract Class<? extends Strategy> getLoggingClass();

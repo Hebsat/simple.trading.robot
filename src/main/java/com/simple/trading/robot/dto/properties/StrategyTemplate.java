@@ -1,18 +1,20 @@
 package com.simple.trading.robot.dto.properties;
 
 import com.simple.trading.robot.dto.strategy.StrategyType;
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.Map;
 
 @Data
+@Builder
 public class StrategyTemplate {
 
     private boolean enabled;
     private String name;
     private StrategyType strategyType;
-    private String instrument;
-    private AccountDto account;
+    private InstrumentTemplate instrument;
+    private AccountTemplate account;
     private Map<String, Object> details;
 
     @Override

@@ -1,10 +1,11 @@
 package com.simple.trading.robot.service.market;
 
+import com.simple.trading.robot.entity.Instrument;
 import com.simple.trading.robot.service.api.MarketApi;
 
 import java.util.Set;
 
-public interface MarketListener {
+public interface  MarketListener {
 
-    void listenToMarket(MarketApi api, Set<String> instruments);
+    void listenToMarket(MarketApi api, Set<Instrument> instruments);
 }

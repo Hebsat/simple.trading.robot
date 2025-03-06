@@ -13,6 +13,6 @@ public class TradingServiceImpl implements TradingService {
 
     @Override
     public void handleCurrentPrice(Candle candle) {
-        log.warn("I've got a candle: {}", candle);
+        log.warn("I've got a candle for instrument {}. Current price is {}", candle.getInstrument().getTicker(), candle.getClosingPrice());
     }
 }

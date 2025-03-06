@@ -3,8 +3,10 @@ package com.simple.trading.robot.service.api;
 import com.simple.trading.robot.dto.api.AccountInfo;
 import com.simple.trading.robot.dto.strategy.InstrumentInfoRequest;
 import com.simple.trading.robot.dto.api.Candle;
+import com.simple.trading.robot.entity.Instrument;
 import com.simple.trading.robot.exception.SimpleTradingRobotRuntimeException;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -21,5 +23,7 @@ public interface MarketApi {
 
     List<Candle> getInstrumentHistory(InstrumentInfoRequest instrumentInfoRequest);
 
-    void listenInstruments(Set<String> instruments, Consumer<Candle> consumer) throws SimpleTradingRobotRuntimeException;
+    void listenInstruments(Collection<Instrument> instruments, Consumer<Candle> consumer) throws SimpleTradingRobotRuntimeException;
+
+    <T extends Instrument> void updateInstrumentInfo(T instrument);
 }

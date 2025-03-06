@@ -30,7 +30,9 @@ simple-trading-robot:
     - enabled: true
       name: strategy1
       strategy-type: simple_strategy
-      instrument: FUTRTS032500
+      instrument:
+        ticker: RIH5
+        type: future
       account:
         api: tinkoff_api
         id: 123
@@ -39,7 +41,9 @@ simple-trading-robot:
     - enabled: true
       name: strategy2
       strategy-type: simple_strategy
-      instrument: FUTYDEX03250
+      instrument:
+        ticker: IMOEXF
+        type: future
       account:
         api: tinkoff_api
         id: 123
@@ -48,17 +52,21 @@ simple-trading-robot:
     - enabled: true
       name: strategy3
       strategy-type: simple_strategy
-      instrument: FUTYDEX03250
+      instrument:
+        ticker: SBERF
+        type: future
       account:
         api: tinkoff_api
         id: 123
         max-sum: 10000.22
         max-percent: 46.5
-        sandbox: true
+        is-sandbox: true
     - enabled: false
       name: strategy4
       strategy-type: another_strategy
-      instrument: inst_name
+      instrument:
+        ticker: inst_name
+        type: bond
       account:
         api: tinkoff_api
         id: 123

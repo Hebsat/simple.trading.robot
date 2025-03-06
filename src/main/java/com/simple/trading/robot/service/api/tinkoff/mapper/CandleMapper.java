@@ -12,7 +12,7 @@ import static org.mapstruct.MappingConstants.ComponentModel.SPRING;
 @Mapper(componentModel = SPRING, uses = {TinkoffConverterUtil.class})
 public interface CandleMapper {
 
-    @Mapping(target = "instrument", source = "request.name")
+    @Mapping(target = "instrument", source = "request.instrument")
     @Mapping(target = "openingPrice", source = "historicCandle.open", qualifiedByName = "toBigDecimal")
     @Mapping(target = "closingPrice", source = "historicCandle.close", qualifiedByName = "toBigDecimal")
     @Mapping(target = "highestPrice", source = "historicCandle.high", qualifiedByName = "toBigDecimal")

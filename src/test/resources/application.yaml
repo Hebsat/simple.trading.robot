@@ -1,0 +1,45 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:test_db;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: test_user
+    password: test_password
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    defer-datasource-initialization: true
+    database: h2
+
+logging:
+  level:
+    com.simple.trading.robot: trace
+
+simple-trading-robot:
+  stub-api:
+    enabled: true
+  tinkoff-api:
+    token: token
+    sandbox-token: sandbox-token
+  threads:
+    always-active: 2
+    max-size: 10
+    seconds-to-live: 10
+  strategies:
+    - enabled: true
+      name: strategy1
+      strategy-type: simple_strategy
+      instrument:
+        ticker: RIH5
+        type: future
+      account:
+        api: stub_api
+        id: 123
+        max-sum: 10000.3
+        max-percent: 44

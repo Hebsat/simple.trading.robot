@@ -26,6 +26,7 @@ public class AnotherTradingStrategy extends AbstractStrategy {
     @Override
     public void initializeStrategy(InitializationResponse initializeInfo) {
         log.info(String.format("Инициализация стратегии %s", name));
+        instrument = initializeInfo.getInstrument();
         log.trace(initializeInfo.toString());
     }
 
@@ -34,14 +35,13 @@ public class AnotherTradingStrategy extends AbstractStrategy {
         return InitializationRequest.builder()
                 .accountId(accountId)
                 .strategyName(name)
-                .instrumentsInfo(instruments.stream()
-                        .map(i -> InstrumentInfoRequest.builder()
+                .instrumentInfo(
+                        InstrumentInfoRequest.builder()
                                 .api(api)
-                                .name(i)
+                                .instrument(instrument)
                                 .interval(CandleInterval.ONE_MINUTE)
                                 .duration(Duration.ofHours(5))
                                 .build())
-                        .toList())
                 .build();
     }
 
