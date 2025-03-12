@@ -70,6 +70,10 @@ public class TinkoffConverterUtil {
             "rub", Currency.RUB
     );
 
+    private static final Map<Currency, String> FROM_CURRENCY = Map.of(
+            Currency.RUB, "rub"
+    );
+
     @Named("toBigDecimal")
     public static BigDecimal toBigDecimal(Quotation value) {
         return Objects.isNull(value) ?
@@ -81,6 +85,14 @@ public class TinkoffConverterUtil {
         return Objects.isNull(moneyValue) ?
                 BigDecimal.ZERO :
                 BigDecimal.valueOf(moneyValue.getUnits()).add(BigDecimal.valueOf(moneyValue.getNano(), 9));
+    }
+
+    public static MoneyValue toMoneyValue(@NonNull BigDecimal value, @NonNull Currency currency) {
+        return MoneyValue.newBuilder()
+                .setCurrency(FROM_CURRENCY.get(currency))
+                .setUnits(value.longValue())
+                .setNano(value.remainder(BigDecimal.ONE).multiply(BigDecimal.valueOf(1_000_000_000)).intValue())
+                .build();
     }
 
     @Named("timestampToTime")

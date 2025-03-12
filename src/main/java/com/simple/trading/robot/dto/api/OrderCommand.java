@@ -1,5 +1,6 @@
-package com.simple.trading.robot.dto;
+package com.simple.trading.robot.dto.api;
 
+import com.simple.trading.robot.entity.Instrument;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -8,7 +9,7 @@ import lombok.Getter;
 public class OrderCommand {
 
     private CommandType commandType;
-    private String instrument;
+    private Instrument instrument;
     private int lots;
 
     public enum CommandType {

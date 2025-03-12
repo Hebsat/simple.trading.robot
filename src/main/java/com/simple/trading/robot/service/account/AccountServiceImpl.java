@@ -13,8 +13,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -87,12 +89,32 @@ public class AccountServiceImpl implements AccountService {
 
     private void checkAccountAmounts(String accountId, List<StrategyTemplate> strategies) {
         AccountInfo accountInfo = getAccountInfo(strategies.getFirst().getAccount().getApi(), strategies.getFirst().getAccount().isSandbox(), accountId);
-        BigDecimal totalAmount = accountInfo.getAmount();
-        log.trace("На счете {} доступно для торгровли {} {}", accountId, totalAmount, accountInfo.getCurrency());
-        strategies.forEach(s -> correctTradingLineAmount(s, totalAmount));
+        log.trace("На счете {} доступно для торгровли {} {}", accountId, accountInfo.getAmount(), accountInfo.getCurrency());
+        if (accountInfo.isSandbox()) {
+            updateSandboxAmount(accountInfo, strategies);
+        }
+        strategies.forEach(s -> correctStrategyAmount(s, accountInfo.getAmount()));
     }
 
-    private void correctTradingLineAmount(StrategyTemplate strategyTemplate, BigDecimal accountAmount) {
+    private void updateSandboxAmount(AccountInfo accountInfo, List<StrategyTemplate> strategies) {
+        Optional<BigDecimal> percentAmount = strategies.stream()
+                .map(StrategyTemplate::getAccount)
+                .map(a -> a.getMaxSum().divide(a.getMaxPercent(), 2, RoundingMode.HALF_UP))
+                .max(Comparator.naturalOrder());
+        BigDecimal countingAccountAmount = BigDecimal.ZERO;
+        if (percentAmount.isPresent()) {
+            countingAccountAmount = percentAmount.get().multiply(BigDecimal.valueOf(100));
+        }
+        if (countingAccountAmount.compareTo(accountInfo.getAmount()) > 0) {
+            BigDecimal amountToAdd = countingAccountAmount.subtract(accountInfo.getAmount());
+            if (apiSelector.getApiByType(accountInfo.getApiType()).fillUpSandboxAccount(accountInfo.getAccountId(), amountToAdd, accountInfo.getCurrency())) {
+                accountInfo.setAmount(countingAccountAmount);
+                log.info("Счет песочницы {} был пополнен на {} {}", accountInfo.getAccountId(), amountToAdd, accountInfo.getCurrency());
+            }
+        }
+    }
+
+    private void correctStrategyAmount(StrategyTemplate strategyTemplate, BigDecimal accountAmount) {
         BigDecimal currentLimit = accountAmount.multiply(strategyTemplate.getAccount().getMaxPercent()).divide(BigDecimal.valueOf(100), RoundingMode.DOWN);
         if (strategyTemplate.getAccount().getMaxSum().compareTo(BigDecimal.ZERO) == 0 || strategyTemplate.getAccount().getMaxSum().compareTo(currentLimit) > 0) {
             strategyTemplate.getAccount().setMaxSum(currentLimit);

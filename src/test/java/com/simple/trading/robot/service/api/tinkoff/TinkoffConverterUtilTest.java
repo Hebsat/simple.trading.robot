@@ -108,6 +108,15 @@ class TinkoffConverterUtilTest {
     }
 
     @Test
+    void toMoneyValue() {
+        MoneyValue moneyValue = TinkoffConverterUtil.toMoneyValue(BigDecimal.valueOf(12.34), RUB);
+
+        assertEquals(12, moneyValue.getUnits());
+        assertEquals(340_000_000, moneyValue.getNano());
+        assertEquals("rub", moneyValue.getCurrency());
+    }
+
+    @Test
     void timestampToTime() {
         OffsetDateTime offsetDateTime = OffsetDateTime.now();
         Timestamp timestamp = Timestamp.newBuilder().setSeconds(offsetDateTime.toEpochSecond()).setNanos(offsetDateTime.getNano()).build();

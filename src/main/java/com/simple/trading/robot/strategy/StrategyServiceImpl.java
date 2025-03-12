@@ -47,7 +47,7 @@ public class StrategyServiceImpl implements StrategyService {
     @Getter(onMethod_ = @Override)
     private Map<ApiType, Set<Instrument>> allInstrumentsByApi = new EnumMap<>(ApiType.class);
 
-    private final Map<String, List<Strategy>> strategiesByInstrumentTicker = new HashMap<>();
+    private final Map<Instrument, List<Strategy>> strategiesByInstrument = new HashMap<>();
     private static final Map<StrategyType, Function<StrategyTemplate, Strategy>> STRATEGY_FACTORY = new EnumMap<>(
             Map.of(
                     SIMPLE_STRATEGY, SimpleTradingStrategy::new,
@@ -61,9 +61,9 @@ public class StrategyServiceImpl implements StrategyService {
     }
 
     @Override
-    public List<Strategy> getStrategyByInstrumentTicker(String ticker) {
-        return strategiesByInstrumentTicker.containsKey(ticker) ?
-                strategiesByInstrumentTicker.get(ticker) :
+    public List<Strategy> getStrategiesByInstrument(Instrument instrument) {
+        return strategiesByInstrument.containsKey(instrument) ?
+                strategiesByInstrument.get(instrument) :
                 new ArrayList<>();
     }
 
@@ -77,7 +77,7 @@ public class StrategyServiceImpl implements StrategyService {
         Strategy strategy = STRATEGY_FACTORY.get(strategyTemplate.getStrategyType()).apply(strategyTemplate);
         strategy.initializeStrategy(prepareInitialization(strategy.getInitializeInfo()));
         allStrategies.put(strategy.getName(), strategy);
-        strategiesByInstrumentTicker.computeIfAbsent(strategy.getInstrument().getTicker(), k -> new ArrayList<>()).add(strategy);
+        strategiesByInstrument.computeIfAbsent(strategy.getInstrument(), k -> new ArrayList<>()).add(strategy);
         allInstrumentsByApi.computeIfAbsent(strategy.getApi(), k -> new HashSet<>()).add(strategy.getInstrument());
     }
 

@@ -23,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import ru.tinkoff.piapi.contract.v1.Account;
 import ru.tinkoff.piapi.contract.v1.HistoricCandle;
+import ru.tinkoff.piapi.contract.v1.MoneyValue;
 import ru.tinkoff.piapi.core.InstrumentsService;
 import ru.tinkoff.piapi.core.InvestApi;
 import ru.tinkoff.piapi.core.MarketDataService;
@@ -33,6 +34,7 @@ import ru.tinkoff.piapi.core.models.Portfolio;
 import ru.tinkoff.piapi.core.stream.MarketDataStreamService;
 import ru.tinkoff.piapi.core.stream.MarketDataSubscriptionService;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -41,10 +43,12 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -109,7 +113,7 @@ class TinkoffApiAdapterTest {
         AccountInfo accountInfo = AccountInfo.builder().build();
         when(investApi.getOperationsService()).thenReturn(operationsService);
         when(operationsService.getPortfolioSync(anyString())).thenReturn(Portfolio.builder().build());
-        when(accountInfoMapper.mapToAccountInfo(any(Portfolio.class))).thenReturn(accountInfo);
+        when(accountInfoMapper.mapToAccountInfo(anyString(), any(Portfolio.class), anyBoolean(), any(ApiType.class))).thenReturn(accountInfo);
 
         AccountInfo result = tinkoffApiAdapter.getAccountInfo("accountId", true);
 
@@ -151,6 +155,26 @@ class TinkoffApiAdapterTest {
         String result = tinkoffApiAdapter.openSandboxAccount();
 
         assertEquals(accountId, result);
+    }
+
+    @Test
+    void fillUpSandboxAccount_success() {
+        when(investApi.getSandboxService()).thenReturn(sandboxService);
+        when(sandboxService.payInSync(anyString(), any(MoneyValue.class))).thenReturn(MoneyValue.newBuilder().setUnits(1).build());
+
+        boolean result = tinkoffApiAdapter.fillUpSandboxAccount("accountId", BigDecimal.ONE, com.simple.trading.robot.entity.Currency.RUB);
+
+        assertTrue(result);
+    }
+
+    @Test
+    void fillUpSandboxAccount_fail() {
+        when(investApi.getSandboxService()).thenReturn(sandboxService);
+        when(sandboxService.payInSync(anyString(), any(MoneyValue.class))).thenReturn(MoneyValue.newBuilder().setUnits(10).build());
+
+        boolean result = tinkoffApiAdapter.fillUpSandboxAccount("accountId", BigDecimal.ONE, com.simple.trading.robot.entity.Currency.RUB);
+
+        assertFalse(result);
     }
 
     @Test

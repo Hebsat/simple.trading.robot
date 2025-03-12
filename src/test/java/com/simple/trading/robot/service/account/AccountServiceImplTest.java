@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -164,5 +165,46 @@ class AccountServiceImplTest {
 
         assertEquals(BigDecimal.ONE, accountTemplate1.getMaxSum());
         assertEquals(BigDecimal.TWO, accountTemplate2.getMaxSum());
+    }
+
+    @Test
+    void init_fillSandboxAccount() {
+        accountTemplate1.setSandbox(true);
+        AccountInfo accountInfo = AccountInfo.builder()
+                .accountId(accountTemplate1.getId())
+                .isSandbox(true)
+                .amount(BigDecimal.ONE)
+                .currency(Currency.RUB)
+                .apiType(ApiType.TINKOFF_API)
+                .build();
+        when(strategyPrepareService.getStrategiesByApiByAccounts()).thenReturn(Map.of(accountTemplate1.getApi(), Map.of(accountTemplate1.getId(), List.of(strategyTemplate1))));
+        when(apiSelector.getApiByType(any())).thenReturn(marketApi);
+        when(marketApi.getAccountInfo(anyString(), anyBoolean())).thenReturn(accountInfo);
+        when(marketApi.getAccountIds(anyBoolean())).thenReturn(Set.of(accountTemplate1.getId()));
+        when(marketApi.fillUpSandboxAccount(anyString(), any(BigDecimal.class), any(Currency.class))).thenReturn(true);
+
+        accountService.init();
+
+        verify(marketApi).fillUpSandboxAccount(accountTemplate1.getId(), BigDecimal.valueOf(2400, 2), Currency.RUB);
+    }
+
+    @Test
+    void init_notFillSandboxAccount() {
+        accountTemplate1.setSandbox(true);
+        AccountInfo accountInfo = AccountInfo.builder()
+                .accountId(accountTemplate1.getId())
+                .isSandbox(true)
+                .amount(BigDecimal.valueOf(1000))
+                .currency(Currency.RUB)
+                .apiType(ApiType.TINKOFF_API)
+                .build();
+        when(strategyPrepareService.getStrategiesByApiByAccounts()).thenReturn(Map.of(accountTemplate1.getApi(), Map.of(accountTemplate1.getId(), List.of(strategyTemplate1))));
+        when(apiSelector.getApiByType(any())).thenReturn(marketApi);
+        when(marketApi.getAccountInfo(anyString(), anyBoolean())).thenReturn(accountInfo);
+        when(marketApi.getAccountIds(anyBoolean())).thenReturn(Set.of(accountTemplate1.getId()));
+
+        accountService.init();
+
+        verify(marketApi, never()).fillUpSandboxAccount(anyString(), any(BigDecimal.class), any(Currency.class));
     }
 }

@@ -2,7 +2,10 @@ package com.simple.trading.robot.service.api.tinkoff;
 
 import com.simple.trading.robot.dto.api.AccountInfo;
 import com.simple.trading.robot.dto.api.Candle;
+import com.simple.trading.robot.dto.api.OrderCommand;
+import com.simple.trading.robot.dto.api.OrderExecuteResponse;
 import com.simple.trading.robot.dto.strategy.InstrumentInfoRequest;
+import com.simple.trading.robot.entity.Currency;
 import com.simple.trading.robot.entity.Instrument;
 import com.simple.trading.robot.exception.SimpleTradingRobotRuntimeException;
 import com.simple.trading.robot.service.api.ApiType;
@@ -18,9 +21,11 @@ import org.springframework.stereotype.Service;
 import ru.tinkoff.piapi.contract.v1.Account;
 import ru.tinkoff.piapi.contract.v1.CandleInterval;
 import ru.tinkoff.piapi.contract.v1.HistoricCandle;
+import ru.tinkoff.piapi.contract.v1.MoneyValue;
 import ru.tinkoff.piapi.core.InvestApi;
 import ru.tinkoff.piapi.core.models.Portfolio;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
@@ -79,7 +84,7 @@ public class TinkoffApiAdapter implements MarketApi {
     public AccountInfo getAccountInfo(String accountId, boolean isSandbox) {
         Portfolio portfolio = invokeApi(i -> i.getOperationsService().getPortfolioSync(accountId), isSandbox);
 
-        return accountInfoMapper.mapToAccountInfo(portfolio);
+        return accountInfoMapper.mapToAccountInfo(accountId, portfolio, isSandbox, ApiType.TINKOFF_API);
     }
 
     @Override
@@ -92,6 +97,12 @@ public class TinkoffApiAdapter implements MarketApi {
     @Override
     public String openSandboxAccount() {
         return invokeApi(i -> i.getSandboxService().openAccountSync(), true);
+    }
+
+    @Override
+    public boolean fillUpSandboxAccount(String accountId, BigDecimal amount, Currency currency) {
+        MoneyValue accepted = sandboxApi.getSandboxService().payInSync(accountId, TinkoffConverterUtil.toMoneyValue(amount, currency));
+        return TinkoffConverterUtil.toBigDecimal(accepted).compareTo(amount) == 0;
     }
 
     @Override
@@ -152,5 +163,20 @@ public class TinkoffApiAdapter implements MarketApi {
             default ->
                     throw new SimpleTradingRobotRuntimeException(String.format("Некорректный тип инструмента %s", instrument.getClass().getName()));
         }
+    }
+
+    @Override
+    public OrderExecuteResponse executeOrder(OrderCommand orderCommand) {
+        return null;
+    }
+
+    @Override
+    public OrderExecuteResponse executeStopLoss(OrderCommand orderCommand) {
+        return null;
+    }
+
+    @Override
+    public OrderExecuteResponse moveStopLoss(OrderCommand orderCommand) {
+        return null;
     }
 }

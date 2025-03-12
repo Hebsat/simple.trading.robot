@@ -60,7 +60,7 @@ simple-trading-robot:
         id: 123
         max-sum: 10000.22
         max-percent: 46.5
-        is-sandbox: true
+        sandbox: true
     - enabled: false
       name: strategy4
       strategy-type: another_strategy

@@ -14,7 +14,7 @@ public interface StrategyService {
 
     Map<ApiType, Set<Instrument>> getAllInstrumentsByApi();
 
-    List<Strategy> getStrategyByInstrumentTicker(String ticker);
+    List<Strategy> getStrategiesByInstrument(Instrument instrument);
 
     Map<String, Strategy> getAllStrategies();
 }

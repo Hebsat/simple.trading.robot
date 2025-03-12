@@ -2,6 +2,8 @@ package com.simple.trading.robot.service.api.stub_api;
 
 import com.simple.trading.robot.dto.api.AccountInfo;
 import com.simple.trading.robot.dto.api.Candle;
+import com.simple.trading.robot.dto.api.OrderCommand;
+import com.simple.trading.robot.dto.api.OrderExecuteResponse;
 import com.simple.trading.robot.dto.strategy.InstrumentInfoRequest;
 import com.simple.trading.robot.entity.Currency;
 import com.simple.trading.robot.entity.Instrument;
@@ -42,6 +44,11 @@ public class StubBrokerApiAdapter implements MarketApi {
     }
 
     @Override
+    public boolean fillUpSandboxAccount(String accountId, BigDecimal amount, Currency currency) {
+        return false;
+    }
+
+    @Override
     public List<Candle> getInstrumentHistory(InstrumentInfoRequest instrumentInfoRequest) {
         return List.of();
     }
@@ -54,5 +61,20 @@ public class StubBrokerApiAdapter implements MarketApi {
     @Override
     public <T extends Instrument> void updateInstrumentInfo(T instrument) {
         instrument.setCurrency(Currency.RUB);
+    }
+
+    @Override
+    public OrderExecuteResponse executeOrder(OrderCommand orderCommand) {
+        return null;
+    }
+
+    @Override
+    public OrderExecuteResponse executeStopLoss(OrderCommand orderCommand) {
+        return null;
+    }
+
+    @Override
+    public OrderExecuteResponse moveStopLoss(OrderCommand orderCommand) {
+        return null;
     }
 }

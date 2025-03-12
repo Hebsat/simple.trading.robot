@@ -85,18 +85,18 @@ class StrategyServiceImplTest {
     }
 
     @Test
-    void getStrategyByInstrumentTicker_success() {
-        ReflectionTestUtils.setField(strategyService, "strategiesByInstrumentTicker", Map.of(instrumentTemplate.getTicker(), List.of(strategy1)));
+    void getStrategiesByInstrument_success() {
+        ReflectionTestUtils.setField(strategyService, "strategiesByInstrument", Map.of(strategy1.getInstrument(), List.of(strategy1)));
 
-        List<Strategy> result = strategyService.getStrategyByInstrumentTicker(instrumentTemplate.getTicker());
+        List<Strategy> result = strategyService.getStrategiesByInstrument(strategy1.getInstrument());
 
         assertEquals(1, result.size());
         assertTrue(result.contains(strategy1));
     }
 
     @Test
-    void getStrategyByInstrumentTicker_empty() {
-        List<Strategy> result = strategyService.getStrategyByInstrumentTicker(instrumentTemplate.getTicker());
+    void getStrategiesByInstrument_empty() {
+        List<Strategy> result = strategyService.getStrategiesByInstrument(strategy1.getInstrument());
 
         assertTrue(result.isEmpty());
     }
@@ -118,7 +118,8 @@ class StrategyServiceImplTest {
         assertEquals(2, strategyService.getAllInstrumentsByApi().get(ApiType.TINKOFF_API).size());
         assertTrue(strategyService.getAllInstrumentsByApi().get(ApiType.TINKOFF_API).stream().allMatch(i -> i.getTicker().equals(instrumentTemplate.getTicker())));
 
-        assertEquals(2, strategyService.getStrategyByInstrumentTicker(instrumentTemplate.getTicker()).size());
+        assertEquals(1, strategyService.getStrategiesByInstrument(strategyService.getAllStrategies().get(strategyName1).getInstrument()).size());
+        assertEquals(1, strategyService.getStrategiesByInstrument(strategyService.getAllStrategies().get(strategyName2).getInstrument()).size());
     }
 
     @Test
